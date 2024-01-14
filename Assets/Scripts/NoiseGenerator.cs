@@ -11,6 +11,12 @@ public class NoiseGenerator : MonoBehaviour
     // For communication with the GPU
     ComputeBuffer _weightsBuffer;
 
+    // Noise Settings
+    [SerializeField] float amplitude = 5f;
+    [SerializeField] float frequency = 0.005f;
+    [SerializeField] int octaves = 8;
+    [SerializeField, Range(0f, 1f)] float groundPercent = 0.2f;
+
     public void Awake()
     {
         CreateBuffers();
@@ -46,6 +52,13 @@ public class NoiseGenerator : MonoBehaviour
         
         // Set buffer between CPU and GPU
         NoiseShader.SetBuffer(0, "_Weights", _weightsBuffer);
+
+        NoiseShader.SetInt("_ChunkSize", GridMetrics.PointsPerChunk);
+        NoiseShader.SetFloat("_Amplitude", amplitude);
+        NoiseShader.SetFloat("_Frequency", frequency);
+        NoiseShader.SetInt("_Octaves", octaves);
+        NoiseShader.SetFloat("_GroundPercent", groundPercent);
+
         // Run the compute shader
         NoiseShader.Dispatch(
             0,

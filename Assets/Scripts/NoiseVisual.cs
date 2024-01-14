@@ -10,11 +10,11 @@ public class NoiseVisual : MonoBehaviour
 
     void Start()
     {
-        // _weights = NoiseGenerator.GetNoise();
-        _weights = new float[GridMetrics.PointsPerChunk * GridMetrics.PointsPerChunk * GridMetrics.PointsPerChunk];
-        for (int i = 0; i < _weights.Length; i++) {
-            _weights[i] = Random.value;
-        }
+        _weights = NoiseGenerator.GetNoise();
+        // _weights = new float[GridMetrics.PointsPerChunk * GridMetrics.PointsPerChunk * GridMetrics.PointsPerChunk];
+        // for (int i = 0; i < _weights.Length; i++) {
+        //     _weights[i] = Random.value;
+        // }
     }
 
     private void OnDrawGizmos() {
