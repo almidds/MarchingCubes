@@ -2,17 +2,9 @@
 #pragma kernel GenerateNoise
 
 #include "Include\FastNoiseLite.hlsl"
-
-static const uint numThreads = 8;
+#include "Include\MetricsCompute.compute"
 
 RWStructuredBuffer<float> _Weights;
-
-int _ChunkSize;
-
-int indexFromCoord(int x, int y, int z)
-{
-    return x + _ChunkSize * (y + _ChunkSize * z);
-}
 
 // Noise numbers
 float _Amplitude;
