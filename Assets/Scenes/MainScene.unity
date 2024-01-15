@@ -485,8 +485,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   NoiseShader: {fileID: 7200000, guid: e43de87a4b4b119468cf13ff353c0d53, type: 3}
-  amplitude: 5
-  frequency: 0.005
+  amplitude: 6.61
+  frequency: 0.18
   octaves: 8
   groundPercent: 0.2
 --- !u!4 &1916701344
