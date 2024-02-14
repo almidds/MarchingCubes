@@ -28,6 +28,10 @@ public class Chunk : MonoBehaviour
     // Weights generated from noise functions
     ComputeBuffer _weightsBuffer;
 
+    public MeshCollider MeshCollider;
+
+    Mesh _mesh;
+
     void CreateBuffers()
     {
         // 5 is the maximum number of triangles per cube
@@ -76,7 +80,14 @@ public class Chunk : MonoBehaviour
     void Start()
     {
         _weights = NoiseGenerator.GetNoise();
-        MeshFilter.sharedMesh = ConstructMesh();
+        _mesh = new Mesh();
+        UpdateMesh();
+    }
+
+    void UpdateMesh() {
+        Mesh mesh = ConstructMesh();
+        MeshFilter.sharedMesh = mesh;
+        MeshCollider.sharedMesh = mesh;
     }
 
     Mesh CreateMeshFromTriangles(Triangle[] triangles)
@@ -96,16 +107,17 @@ public class Chunk : MonoBehaviour
             tris[startIndex + 1] = startIndex + 1;
             tris[startIndex + 2] = startIndex + 2;
         }
-
-        Mesh mesh = new Mesh();
-        mesh.vertices = verts;
-        mesh.triangles = tris;
-        mesh.RecalculateNormals();
-        return mesh;
+        _mesh.Clear();
+        _mesh.vertices = verts;
+        _mesh.triangles = tris;
+        _mesh.RecalculateNormals();
+        return _mesh;
     }
 
     Mesh ConstructMesh()
     {
+        int kernel = MarchingShader.FindKernel("March");
+
         MarchingShader.SetBuffer(0, "_Triangles", _trianglesBuffer);
         MarchingShader.SetBuffer(0, "_Weights", _weightsBuffer);
 
@@ -117,7 +129,7 @@ public class Chunk : MonoBehaviour
 
         MarchingShader.Dispatch
             (
-                0,
+                kernel,
                 GridMetrics.PointsPerChunk / GridMetrics.NumThreads,
                 GridMetrics.PointsPerChunk / GridMetrics.NumThreads,
                 GridMetrics.PointsPerChunk / GridMetrics.NumThreads
@@ -137,24 +149,28 @@ public class Chunk : MonoBehaviour
         return triCount[0];
     }
 
-    private void OnDrawGizmos()
-    {
-        if (_weights == null || _weights.Length == 0)
-        {
-            return;
-        }
-        for (int x = 0; x < GridMetrics.PointsPerChunk; x++)
-        {
-            for (int y = 0; y < GridMetrics.PointsPerChunk; y++)
-            {
-                for (int z = 0; z < GridMetrics.PointsPerChunk; z++)
-                {
-                    int index = x + GridMetrics.PointsPerChunk * (y + GridMetrics.PointsPerChunk * z);
-                    float noiseValue = _weights[index];
-                    Gizmos.color = Color.Lerp(Color.black, Color.white, noiseValue);
-                    Gizmos.DrawCube(new Vector3(x, y, z), Vector3.one * 0.2f);
-                }
-            }
-        }
+    public void EditWeights(Vector3 hitPosition, float brushSize, bool add) {
+        int kernel = MarchingShader.FindKernel("UpdateWeights");
+
+        _weightsBuffer.SetData(_weights);
+        MarchingShader.SetBuffer(kernel, "_Weights", _weightsBuffer);
+
+        MarchingShader.SetInt("_ChunkSize", GridMetrics.PointsPerChunk);
+        MarchingShader.SetVector("_HitPosition", hitPosition);
+        MarchingShader.SetFloat("_BrushSize", brushSize);
+        MarchingShader.SetFloat("_TerraformStrength", add ? 1f : -1f);
+
+        MarchingShader.Dispatch
+            (
+                kernel,
+                GridMetrics.PointsPerChunk / GridMetrics.NumThreads,
+                GridMetrics.PointsPerChunk / GridMetrics.NumThreads,
+                GridMetrics.PointsPerChunk / GridMetrics.NumThreads
+            );
+
+        _weightsBuffer.GetData(_weights);
+
+        UpdateMesh();
     }
+
 }

@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 16592779}
   - component: {fileID: 16592778}
   - component: {fileID: 16592777}
+  - component: {fileID: 16592780}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -207,14 +208,27 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 16592776}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: -0.3626214, y: -0.109831385, z: 0.042999938, w: -0.92444247}
+  m_LocalPosition: {x: 4.521002, y: 18.81559, z: -8.9054575}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &16592780
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16592776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb0e5901c30407c4eb8a91b96945213d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BrushSize: 0.4
 --- !u!1 &399543260
 GameObject:
   m_ObjectHideFlags: 0
@@ -227,7 +241,8 @@ GameObject:
   - component: {fileID: 399543263}
   - component: {fileID: 399543262}
   - component: {fileID: 399543261}
-  m_Layer: 0
+  - component: {fileID: 399543265}
+  m_Layer: 3
   m_Name: Chunk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -249,6 +264,7 @@ MonoBehaviour:
   NoiseGenerator: {fileID: 1916701343}
   MeshFilter: {fileID: 399543263}
   MarchingShader: {fileID: 7200000, guid: 48e4a17f40f0a8441aa051d1ca1c9bd6, type: 3}
+  MeshCollider: {fileID: 399543265}
 --- !u!23 &399543262
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -314,6 +330,28 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!64 &399543265
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 399543260}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
 --- !u!1 &655914788
 GameObject:
   m_ObjectHideFlags: 0
@@ -361,6 +399,7 @@ MonoBehaviour:
   NoiseGenerator: {fileID: 1916701343}
   MeshFilter: {fileID: 0}
   MarchingShader: {fileID: 0}
+  MeshCollider: {fileID: 0}
 --- !u!1 &1540605459
 GameObject:
   m_ObjectHideFlags: 0
