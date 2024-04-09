@@ -72,9 +72,9 @@ void March (uint3 id : SV_DispatchThreadID)
         // worldPos is the coordinate (float3)
         // of the cube itself in the game world.
         Triangle tri;
-        tri.a = interp(cornerOffsets[e00], cubeValues[e00], cornerOffsets[e01], cubeValues[e01]) + id;
-        tri.b = interp(cornerOffsets[e10], cubeValues[e10], cornerOffsets[e11], cubeValues[e11]) + id;
-        tri.c = interp(cornerOffsets[e20], cubeValues[e20], cornerOffsets[e21], cubeValues[e21]) + id;
+        tri.a = (interp(cornerOffsets[e00], cubeValues[e00], cornerOffsets[e01], cubeValues[e01]) + id) / (_ChunkSize - 1) * _Scale;
+        tri.b = (interp(cornerOffsets[e10], cubeValues[e10], cornerOffsets[e11], cubeValues[e11]) + id) / (_ChunkSize - 1) * _Scale;
+        tri.c = (interp(cornerOffsets[e20], cubeValues[e20], cornerOffsets[e21], cubeValues[e21]) + id) / (_ChunkSize - 1) * _Scale;
         _Triangles.Append(tri);
     }
 }
@@ -87,7 +87,7 @@ void UpdateWeights(uint3 id : SV_DispatchThreadID)
         return;
     }
 
-    if ( distance( id, _HitPosition ) <= _BrushSize )
+    if ( distance(((id * 1.0) / (_ChunkSize - 1) * _Scale), _HitPosition ) <= _BrushSize )
     {
         _Weights[indexFromCoord( id.x, id.y, id.z )] += _TerraformStrength;
     }

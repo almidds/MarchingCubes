@@ -11,6 +11,7 @@ float _Amplitude;
 float _Frequency;
 int _Octaves;
 float _GroundPercent;
+int _GroundLevel;
 
 [numthreads(numThreads, numThreads, numThreads)]
 void GenerateNoise (uint3 id : SV_DispatchThreadID)
@@ -21,8 +22,8 @@ void GenerateNoise (uint3 id : SV_DispatchThreadID)
     noise.frequency = _Frequency;
     noise.octaves = _Octaves;
 
-    float3 pos = id;
-    float ground = -pos.y + (_GroundPercent * _ChunkSize);
+    float3 pos = id * 1.0 / (_ChunkSize - 1) * _Scale;;
+    float ground = -pos.y + (_GroundPercent * _GroundLevel);
     float n = ground + fnlGetNoise3D(noise, pos.x, pos.y, pos.z) * _Amplitude;
     _Weights[indexFromCoord(id.x, id.y, id.z)] = n;
 }

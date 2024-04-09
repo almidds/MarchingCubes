@@ -6,6 +6,9 @@ using UnityEngine;
 public class Chunk : MonoBehaviour
 {
 
+    [Range(0, 4)]
+    public int LOD;
+
     public NoiseGenerator NoiseGenerator;
 
     float[] _weights;
@@ -37,9 +40,9 @@ public class Chunk : MonoBehaviour
         // 5 is the maximum number of triangles per cube
         _trianglesBuffer = new ComputeBuffer
             (
-                5 * GridMetrics.PointsPerChunk *
-                GridMetrics.PointsPerChunk *
-                GridMetrics.PointsPerChunk,
+                5 * GridMetrics.PointsPerChunk(LOD) *
+                GridMetrics.PointsPerChunk(LOD) *
+                GridMetrics.PointsPerChunk(LOD),
                 Triangle.SizeOf,
                 ComputeBufferType.Append
             );
@@ -53,9 +56,9 @@ public class Chunk : MonoBehaviour
 
         _weightsBuffer = new ComputeBuffer
             (
-                GridMetrics.PointsPerChunk *
-                GridMetrics.PointsPerChunk *
-                GridMetrics.PointsPerChunk,
+                GridMetrics.PointsPerChunk(LOD) *
+                GridMetrics.PointsPerChunk(LOD) *
+                GridMetrics.PointsPerChunk(LOD),
                 sizeof(float)
             );
     }
@@ -67,21 +70,17 @@ public class Chunk : MonoBehaviour
         _weightsBuffer.Release();
     }
 
-    public void Awake()
+    private void Start() {
+        Create();
+    }
+
+    void Create()
     {
         CreateBuffers();
-    }
-
-    public void OnDestroy()
-    {
-        ReleaseBuffers();
-    }
-
-    void Start()
-    {
-        _weights = NoiseGenerator.GetNoise();
+        _weights = NoiseGenerator.GetNoise(LOD);
         _mesh = new Mesh();
         UpdateMesh();
+        ReleaseBuffers();
     }
 
     void UpdateMesh() {
@@ -121,8 +120,9 @@ public class Chunk : MonoBehaviour
         MarchingShader.SetBuffer(0, "_Triangles", _trianglesBuffer);
         MarchingShader.SetBuffer(0, "_Weights", _weightsBuffer);
 
-        MarchingShader.SetInt("_ChunkSize", GridMetrics.PointsPerChunk);
+        MarchingShader.SetInt("_ChunkSize", GridMetrics.PointsPerChunk(LOD));
         MarchingShader.SetFloat("_IsoLevel", 0.5f);
+        MarchingShader.SetInt("_Scale", GridMetrics.Scale);
 
         _weightsBuffer.SetData(_weights);
         _trianglesBuffer.SetCounterValue(0);
@@ -130,9 +130,9 @@ public class Chunk : MonoBehaviour
         MarchingShader.Dispatch
             (
                 kernel,
-                GridMetrics.PointsPerChunk / GridMetrics.NumThreads,
-                GridMetrics.PointsPerChunk / GridMetrics.NumThreads,
-                GridMetrics.PointsPerChunk / GridMetrics.NumThreads
+                GridMetrics.ThreadGroups(LOD),
+                GridMetrics.ThreadGroups(LOD),
+                GridMetrics.ThreadGroups(LOD)
             );
         
         Triangle[] triangles = new Triangle[ReadTriangleCount()];
@@ -150,27 +150,36 @@ public class Chunk : MonoBehaviour
     }
 
     public void EditWeights(Vector3 hitPosition, float brushSize, bool add) {
+        CreateBuffers();
         int kernel = MarchingShader.FindKernel("UpdateWeights");
 
         _weightsBuffer.SetData(_weights);
         MarchingShader.SetBuffer(kernel, "_Weights", _weightsBuffer);
 
-        MarchingShader.SetInt("_ChunkSize", GridMetrics.PointsPerChunk);
+        MarchingShader.SetInt("_ChunkSize", GridMetrics.PointsPerChunk(LOD));
         MarchingShader.SetVector("_HitPosition", hitPosition);
         MarchingShader.SetFloat("_BrushSize", brushSize);
         MarchingShader.SetFloat("_TerraformStrength", add ? 1f : -1f);
+        MarchingShader.SetInt("_Scale", GridMetrics.Scale);
 
         MarchingShader.Dispatch
             (
                 kernel,
-                GridMetrics.PointsPerChunk / GridMetrics.NumThreads,
-                GridMetrics.PointsPerChunk / GridMetrics.NumThreads,
-                GridMetrics.PointsPerChunk / GridMetrics.NumThreads
+                GridMetrics.ThreadGroups(LOD),
+                GridMetrics.ThreadGroups(LOD),
+                GridMetrics.ThreadGroups(LOD)
             );
 
         _weightsBuffer.GetData(_weights);
 
         UpdateMesh();
+        ReleaseBuffers();
+    }
+
+    private void OnValidate() {
+        if (Application.isPlaying) {
+            Create();
+        }
     }
 
 }
