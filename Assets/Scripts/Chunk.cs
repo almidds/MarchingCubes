@@ -6,6 +6,8 @@ using UnityEngine;
 public class Chunk : MonoBehaviour
 {
 
+    public ComputeShader MarchingShader;
+
     [Range(0, 4)]
     public int LOD;
 
@@ -14,8 +16,6 @@ public class Chunk : MonoBehaviour
     float[] _weights;
 
     public MeshFilter MeshFilter;
-
-    public ComputeShader MarchingShader;
 
     struct Triangle {
         public Vector3 a;
@@ -56,9 +56,9 @@ public class Chunk : MonoBehaviour
 
         _weightsBuffer = new ComputeBuffer
             (
-                GridMetrics.PointsPerChunk(LOD) *
-                GridMetrics.PointsPerChunk(LOD) *
-                GridMetrics.PointsPerChunk(LOD),
+                GridMetrics.PointsPerChunk(GridMetrics.LastLod) *
+                GridMetrics.PointsPerChunk(GridMetrics.LastLod) *
+                GridMetrics.PointsPerChunk(GridMetrics.LastLod),
                 sizeof(float)
             );
     }
@@ -77,7 +77,9 @@ public class Chunk : MonoBehaviour
     void Create()
     {
         CreateBuffers();
-        _weights = NoiseGenerator.GetNoise(LOD);
+        if (_weights == null) {
+            _weights = NoiseGenerator.GetNoise(GridMetrics.LastLod);
+        }
         _mesh = new Mesh();
         UpdateMesh();
         ReleaseBuffers();
@@ -120,10 +122,14 @@ public class Chunk : MonoBehaviour
         MarchingShader.SetBuffer(0, "_Triangles", _trianglesBuffer);
         MarchingShader.SetBuffer(0, "_Weights", _weightsBuffer);
 
-        MarchingShader.SetInt("_ChunkSize", GridMetrics.PointsPerChunk(LOD));
+        MarchingShader.SetInt("_ChunkSize", GridMetrics.PointsPerChunk(GridMetrics.LastLod));
         MarchingShader.SetFloat("_IsoLevel", 0.5f);
         MarchingShader.SetInt("_Scale", GridMetrics.Scale);
 
+        MarchingShader.SetInt("_LODSize", GridMetrics.PointsPerChunk(LOD));
+        float lodScaleFactor = ((float)GridMetrics.PointsPerChunk(GridMetrics.LastLod) + 1) / (float)GridMetrics.PointsPerChunk(LOD);
+        MarchingShader.SetFloat("_LodScaleFactor", lodScaleFactor);
+        
         _weightsBuffer.SetData(_weights);
         _trianglesBuffer.SetCounterValue(0);
 
@@ -156,7 +162,7 @@ public class Chunk : MonoBehaviour
         _weightsBuffer.SetData(_weights);
         MarchingShader.SetBuffer(kernel, "_Weights", _weightsBuffer);
 
-        MarchingShader.SetInt("_ChunkSize", GridMetrics.PointsPerChunk(LOD));
+        MarchingShader.SetInt("_ChunkSize", GridMetrics.PointsPerChunk(GridMetrics.LastLod));
         MarchingShader.SetVector("_HitPosition", hitPosition);
         MarchingShader.SetFloat("_BrushSize", brushSize);
         MarchingShader.SetFloat("_TerraformStrength", add ? 1f : -1f);
@@ -165,9 +171,9 @@ public class Chunk : MonoBehaviour
         MarchingShader.Dispatch
             (
                 kernel,
-                GridMetrics.ThreadGroups(LOD),
-                GridMetrics.ThreadGroups(LOD),
-                GridMetrics.ThreadGroups(LOD)
+                GridMetrics.ThreadGroups(GridMetrics.LastLod),
+                GridMetrics.ThreadGroups(GridMetrics.LastLod),
+                GridMetrics.ThreadGroups(GridMetrics.LastLod)
             );
 
         _weightsBuffer.GetData(_weights);

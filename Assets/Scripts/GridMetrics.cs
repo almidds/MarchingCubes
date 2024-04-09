@@ -25,4 +25,6 @@ public static class GridMetrics {
     public const int Scale = 32;
 
     public const int GroundLevel = Scale / 2;
+
+    public static int LastLod = LODs.Length - 1;
 }
